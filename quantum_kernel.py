@@ -4,17 +4,6 @@ from cirq import S, X, H, SWAP, ry
 from cirq import Moment, Circuit, LineQubit, Simulator, measure
 from data_preprocess import load_and_process_data
 
-# Number of (training,test) points
-M, N = 128, 100
-
-# MNIST numbers (2 for binary)
-first, second = 6, 9
-
-# Get Train and Test Data
-thetas_train, y_train, thetas_test, y_test = load_and_process_data(first, second, M, N)
-
-# thetas_train = [np.arctan(1 / (0.987 / 0.195)), np.arctan(1 / (0.345 / 0.935))]
-
 def build_kernel_original(M, thetas_train, verbose=0):
     # Circuit
     c = Circuit()
@@ -44,6 +33,7 @@ def build_kernel_original(M, thetas_train, verbose=0):
     if verbose >= 1:
         print()
         print(c)
+        print()
 
     s = Simulator()
     results = s.simulate(c)
@@ -53,13 +43,17 @@ def build_kernel_original(M, thetas_train, verbose=0):
     Ktop = np.array([[np.trace(state_outer_norm[:half, :half]), np.trace(state_outer_norm[:half, half:])],
                     [np.trace(state_outer_norm[half:, :half]), np.trace(state_outer_norm[half:, half:])]])
     if verbose >= 2:
+        print()
         print('Final State Vector:', state)
         print('Normalized Outer Product:', state_outer_norm)
         print('K-top [K/tr(K)]:', Ktop)
+        print()
     
     K = Ktop * 2
     if verbose >= 1:
+        print()
         print('K:', K)
+        print()
 
     return K
 
@@ -80,3 +74,49 @@ def build_kernel_simplified(M, thetas_train, verbose=0):
     # # Set M Measurements
     # for i in range(M):
     #     c.append(measure(qubits[i]))
+
+    if verbose >= 1:
+        print()
+        print(c)
+        print()
+
+    s = Simulator()
+    results = s.simulate(c)
+    state = results.final_state_vector.real
+    state_outer_norm = (1. / M) * np.outer(state, state)
+    half = state_outer_norm.shape[0] // 2
+    Ktop = np.array([[np.trace(state_outer_norm[:half, :half]), np.trace(state_outer_norm[:half, half:])],
+                    [np.trace(state_outer_norm[half:, :half]), np.trace(state_outer_norm[half:, half:])]])
+    if verbose >= 2:
+        print()
+        print('Final State Vector:', state)
+        print('Normalized Outer Product:', state_outer_norm)
+        print('K-top [K/tr(K)]:', Ktop)
+        print()
+    
+    K = Ktop * 2
+    if verbose >= 1:
+        print()
+        print('K:', K)
+        print()
+
+    return K
+
+if __name__ == '__main__':
+    # Number of (training,test) points
+    M, N = 128, 100
+
+    # MNIST numbers (2 for binary)
+    first, second = 6, 9
+
+    # Get Train and Test Data
+    print('Loading Data')
+    thetas_train, _, _, _ = load_and_process_data(first, second, M, N)
+
+    print('K Original')
+    K_original = build_kernel_original(M, thetas_train)
+    print('K Simplified')
+    K_simplified = build_kernel_simplified(M, thetas_train)
+
+    print('K Original:', K_original)
+    print('K Simplified:', K_simplified)
