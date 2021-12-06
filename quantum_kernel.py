@@ -104,7 +104,7 @@ def build_kernel_simplified(M, thetas_train, verbose=0):
 
 if __name__ == '__main__':
     # Number of (training,test) points
-    M, N = 128, 100
+    M, N = 8, 0
 
     # MNIST numbers (2 for binary)
     first, second = 6, 9
