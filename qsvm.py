@@ -1,10 +1,11 @@
+import argparse
 import numpy as np
 from cirq import S, X, H, SWAP, ry
 from cirq import Moment, Circuit, LineQubit, Simulator, measure
 
 from gates import eF, SDagger
 from quantum_kernel import build_kernel_original
-from data_preprocess import load_and_process_data
+from data_preprocess import load_and_process_data_mnist, load_and_process_data_housing
 
 def qsvm_circuit(F, theta0, theta1, theta2, r=4, verbose=0):
     # Circuit
@@ -54,48 +55,72 @@ def qsvm_circuit(F, theta0, theta1, theta2, r=4, verbose=0):
     c.append(Moment([ry(-2*theta0).on(q2).controlled_by(q4)]))
     c.append(Moment([H(q3).controlled_by(q4)]))
 
-    # # End Measurement
-    # c.append(measure(q4))
-
+    # Print the circuit if desired
     if verbose == 1:
         print()
         print(c)
         print()
 
+
+    # Create the simulator
     s = Simulator()
+
+    # Get the simulated results and final state vector
     results = s.simulate(c)
     state = results.final_state_vector.real
+
+    # O = |000><000| ⊗ |1><0|
     O = np.zeros((16, 16)); O[1][0] = 1
+
+    # E = <ψ|O|ψ>
     E = np.inner(np.matmul(state.conj().T, O), state)
+
+    # Prediction = sign(E)
     prediction = int(np.sign(E).real)
     if prediction == 0: prediction = 1
 
     return prediction
 
 if __name__ == '__main__':
-    # MNIST numbers (2 for binary)
-    first, second = 6, 9
+    # Create an argument for the script to select the dataset
+    # By default the MNIST dataset will be utilized
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-d', '--dataset', help='Choose one of the datasets: mnist or housing', choices=['mnist', 'housing'], default='mnist')
+    args = parser.parse_args()
 
-    # Number of training points for kernel generation, load data, and build kernel
-    M = 128
-    thetas_train, _, _, _ = load_and_process_data(first, second, M, 0)
-    kernel = build_kernel_original(M, thetas_train)
+    if args.dataset == 'mnist':
+        # MNIST numbers (2 for binary)
+        first, second = 6, 9
 
-    # Number of (train, test) points for qsvm circuit and load data
-    M, N = 2, 100
-    thetas_train, y_train, thetas_test, y_test = load_and_process_data(first, second, M, N)
+        # Number of training points for kernel generation, load data, and build kernel
+        M = 128
+        thetas_train, _, _, _, _, _, _ = load_and_process_data_mnist(first, second, M, 0)
+        kernel = build_kernel_original(M, thetas_train)
 
-    # Map Y values to +1, -1
-    uniques = np.unique(y_train)
-    unique_map = {-((i*2)-1):uniques[i] for i in range(len(uniques))}
+        # Number of (train, test) points for qsvm circuit and load data
+        M, N = 2, 100
+        thetas_train, _, y_train, thetas_test, _, y_test, unique_map = load_and_process_data_mnist(first, second, M, N)
+
+    else:
+        # Feature indices for housing data
+        first, second = 5, 12
+
+        # Number of training points for kernel generation, load data, and build kernel
+        M = 128
+        thetas_train, _, _, _, _, _, _ = load_and_process_data_housing(first, second, M, 0)
+        kernel = build_kernel_original(M, thetas_train)
+
+        # Number of (train, test) points for qsvm circuit and load data
+        M, N = 2, 100
+        thetas_train, _, y_train, thetas_test, _, y_test, unique_map = load_and_process_data_housing(first, second, M, N)
 
     # Run QSVM Circuit for each Test Point
     num_correct = 0
-    for i in range(N):
+    for i in range(len(y_test)):
         prediction = qsvm_circuit(kernel, thetas_test[i], thetas_train[0], thetas_train[1])
-        prediction_number = unique_map[prediction]
-        if prediction_number == y_test[i]:
+        if prediction == y_test[i]:
             num_correct += 1
 
     # Print the Test Accuracy
-    print(f'Accuracy: {100 * num_correct / N:.2f}%')
+    print(f'Data Map: {unique_map}')
+    print(f'Accuracy: {100 * num_correct / len(y_test):.2f}%')
