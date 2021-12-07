@@ -8,6 +8,28 @@ from quantum_kernel import build_kernel_original
 from data_preprocess import load_and_process_data_mnist, load_and_process_data_housing
 
 def qsvm_circuit(F, theta0, theta1, theta2, r=4, verbose=0):
+    """Creates and runs the QSVM circuit for two given train values and one test value.
+
+    After the thetas are ran through the QSVM circuit, the resulting state vector
+    is used to determine the prediction value [1/-1] for the given test theta.
+    First an expectation matrix (O) is created, then used with the inner product
+    of the state vector with itself. The sign of the resulting value is what is
+    used for the prediction. The formula for these steps is denoted as follows:
+
+    1. O = |000><000| ⊗ |1><0|
+    2. E = <ψ|O|ψ>
+    3. P = sign(E)
+
+    Args:
+        F: The matrix used to generate the unitary operator e^(iFt0).
+        theta0: The test theta, for which a prediction will be determined.
+        theta1: The first train theta.
+        theta2: The second train theta.
+        r: A term used to adjust the controlled rotation during the HHL portion.
+        verbose: A parameter to determine what information is printed. Either 0, 1, or 2.
+    Returns:
+        A prediction for the given test theta, either 1 or -1.
+    """
     # Circuit
     c = Circuit()
 
@@ -103,7 +125,7 @@ if __name__ == '__main__':
 
     else:
         # Feature indices for housing data
-        first, second = 5, 12
+        first, second = 10, 12
 
         # Number of training points for kernel generation, load data, and build kernel
         M = 128

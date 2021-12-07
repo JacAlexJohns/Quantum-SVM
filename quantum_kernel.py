@@ -6,6 +6,28 @@ from cirq import Moment, Circuit, LineQubit, Simulator, measure
 from data_preprocess import load_and_process_data_mnist, load_and_process_data_housing
 
 def build_kernel_original(M, thetas_train, verbose=0):
+    """Creates and runs the quantum kernel generation circuit with the typical implementation.
+
+    The typcial implementation of the quantum kernel generation creates a single line where all 
+    rotations are executed, with the control bits being unique to each rotation gate so that each
+    is executed based on the specific control of the initial lines.
+
+    This results in log2(M)+1 lines, where the log2(M) lines are the control lines and the final
+    line contains all of the controlled rotations. After the final state vector is obtained, it
+    is used to calculate the kernel matrix K. This kernel matrix is then returned. The formula
+    for the kernel matrix is as follows:
+
+    1. Ktop = K / tr(K) = trB(|ψ><ψ|)
+    2. K = Ktop * tr(K)
+    NOTE: Since the train values were normalized, tr(K) = 2.
+
+    Args:
+        M: The number of training points to be used.
+        theta_train: The list of training thetas for use in the circuit.
+        verbose: A parameter to determine what information is printed. Either 0, 1, or 2.
+    Returns:
+        A kernel matrix, of size 2x2.
+    """
     # Circuit
     c = Circuit()
 
@@ -66,6 +88,28 @@ def build_kernel_original(M, thetas_train, verbose=0):
     return K
 
 def build_kernel_simplified(M, thetas_train, verbose=0):
+    """Creates and runs the quantum kernel generation circuit with the modified implementation.
+
+    The modified implementation of the kernel generation removes the control from the rotation
+    gates and instead uses M qubits, each of which is put through a single rotation gate. Each
+    rotation gate is mapped to a single train theta. This has the effect of increasing the
+    number of qubits for the system but decreasing the number of gates, as the added control
+    would require many more additional gates in an actual implementation.
+
+    After the final state vector is obtained, it is used to calculate the kernel matrix K.
+    This kernel matrix is then returned. The formula for the kernel matrix is as follows:
+
+    1. Ktop = K / tr(K) = trB((1/M)*|ψ><ψ|)
+    2. K = Ktop * tr(K)
+    NOTE: Since the train values were normalized, tr(K) = 2.
+
+    Args:
+        M: The number of training points to be used.
+        theta_train: The list of training thetas for use in the circuit.
+        verbose: A parameter to determine what information is printed. Either 0, 1, or 2.
+    Returns:
+        A kernel matrix, of size 2x2.
+    """
     # Circuit
     c = Circuit()
     
@@ -76,7 +120,6 @@ def build_kernel_simplified(M, thetas_train, verbose=0):
 
     # Set M Rotations w/ Each Training Theta
     for i in range(M):
-        c.append(H(qubits[i]))
         c.append(ry(2*thetas_train[i]).on(qubits[i]))
 
     # Print the circuit if desired
@@ -136,7 +179,7 @@ if __name__ == '__main__':
         thetas_train, _, _, _, _, _, _ = load_and_process_data_mnist(first, second, M, N)
     else:
         # Feature indices for housing data
-        first, second = 5, 12
+        first, second = 10, 12
 
         # Number of (train, test) points
         M, N = 8, 0
@@ -145,11 +188,9 @@ if __name__ == '__main__':
         thetas_train, _, _, _, _, _, _ = load_and_process_data_housing(first, second, M, N)
 
     # Get the original and the simplified kernels
-    print('K Original')
     K_original = build_kernel_original(M, thetas_train)
-    print('K Simplified')
     K_simplified = build_kernel_simplified(M, thetas_train)
 
     # Show the original and the simplified kernels
-    print('K Original:', K_original)
-    print('K Simplified:', K_simplified)
+    print('K Original:\n', K_original)
+    print('K Simplified:\n', K_simplified)

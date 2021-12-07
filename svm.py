@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     else:
         # Feature indices for housing data
-        first, second = 5, 12
+        first, second = 10, 12
 
         # Number of (train, test) points for qsvm circuit and load data
         M, N = 128, 100
