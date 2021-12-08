@@ -165,6 +165,7 @@ if __name__ == '__main__':
     # By default the MNIST dataset will be utilized
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('-d', '--dataset', help='Choose one of the datasets: mnist or housing', choices=['mnist', 'housing'], default='mnist')
+    parser.add_argument('-v', '--verbose', help='Choose one of the verbosity options', type=int, choices=[0, 1, 2], default=0)
     args = parser.parse_args()
 
     print('Loading Data')
@@ -188,8 +189,8 @@ if __name__ == '__main__':
         thetas_train, _, _, _, _, _, _ = load_and_process_data_housing(first, second, M, N)
 
     # Get the original and the simplified kernels
-    K_original = build_kernel_original(M, thetas_train)
-    K_simplified = build_kernel_simplified(M, thetas_train)
+    K_original = build_kernel_original(M, thetas_train, verbose=args.verbose)
+    K_simplified = build_kernel_simplified(M, thetas_train, verbose=args.verbose)
 
     # Show the original and the simplified kernels
     print('K Original:\n', K_original)

@@ -108,6 +108,7 @@ if __name__ == '__main__':
     # By default the MNIST dataset will be utilized
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('-d', '--dataset', help='Choose one of the datasets: mnist or housing', choices=['mnist', 'housing'], default='mnist')
+    parser.add_argument('-v', '--verbose', help='Choose one of the verbosity options', type=int, choices=[0, 1, 2], default=0)
     args = parser.parse_args()
 
     if args.dataset == 'mnist':
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         # Number of training points for kernel generation, load data, and build kernel
         M = 128
         thetas_train, _, _, _, _, _, _ = load_and_process_data_mnist(first, second, M, 0)
-        kernel = build_kernel_original(M, thetas_train)
+        kernel = build_kernel_original(M, thetas_train, verbose=args.verbose)
 
         # Number of (train, test) points for qsvm circuit and load data
         M, N = 2, 100
@@ -130,7 +131,7 @@ if __name__ == '__main__':
         # Number of training points for kernel generation, load data, and build kernel
         M = 128
         thetas_train, _, _, _, _, _, _ = load_and_process_data_housing(first, second, M, 0)
-        kernel = build_kernel_original(M, thetas_train)
+        kernel = build_kernel_original(M, thetas_train, verbose=args.verbose)
 
         # Number of (train, test) points for qsvm circuit and load data
         M, N = 2, 100
@@ -139,7 +140,7 @@ if __name__ == '__main__':
     # Run QSVM Circuit for each Test Point
     num_correct = 0
     for i in range(len(y_test)):
-        prediction = qsvm_circuit(kernel, thetas_test[i], thetas_train[0], thetas_train[1])
+        prediction = qsvm_circuit(kernel, thetas_test[i], thetas_train[0], thetas_train[1], verbose=args.verbose)
         if prediction == y_test[i]:
             num_correct += 1
 
