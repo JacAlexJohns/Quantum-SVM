@@ -99,7 +99,7 @@ def build_kernel_simplified(M, thetas_train, verbose=0):
     After the final state vector is obtained, it is used to calculate the kernel matrix K.
     This kernel matrix is then returned. The formula for the kernel matrix is as follows:
 
-    1. Ktop = K / tr(K) = trB((1/M)*|ψ><ψ|)
+    1. Ktop = K / tr(K) = trB(|ψ><ψ|)
     2. K = Ktop * tr(K)
     NOTE: Since the train values were normalized, tr(K) = 2.
 
@@ -135,8 +135,8 @@ def build_kernel_simplified(M, thetas_train, verbose=0):
     results = s.simulate(c)
     state = results.final_state_vector.real
 
-    # Get the outer product of the state vector with itself normalized by M
-    state_outer_norm = (1. / M) * np.outer(state, state)
+    # Get the outer product of the state vector with itself
+    state_outer_norm = np.outer(state, state)
 
     # Set a value to half the length/width of the outer product and use it to find the partial trace TrB
     half = state_outer_norm.shape[0] // 2
