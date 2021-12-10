@@ -27,35 +27,24 @@ As mentioned in the files section, there are three circuits that are available i
 
 The kernel circuits are designed so that they can make use of a variable number of training datapoints. For ease of use it is recommended that the number of training points used is a power of 2. Additionally, it is not recommended to feed more than 8 datapoints to the `build_kernel_simplified` method. The simplified kernel circuit creates a qubit line for each datapoint, which means that the final state vector is the tensor product of N qubits, resulting in 2<sup>N</sup> terms in the final state vector. The outer product of this state vector is then taken with itself, resulting in a matrix that is 2<sup>N</sup>x2<sup>N</sup>. As this grows exponentially with N, it is recommended to keep N small. In contrast, the `build_kernel_original` method results in a matrix that is log2(N)xlog2(N), thus more training data may be fed to the original kernel method. Examples of each circuit are shown below:
 
-<center><img alt="Kernel Circuit Original 4" src="resources/QKernel-Circuit-O-4.png"></center>
-<center><img alt="Kernel Circuit Original 8" src="resources/QKernel-Circuit-O-8.png"></center>
-<center><img alt="Kernel Circuit Modified 4" src="resources/QKernel-Circuit-M-4.png"><img alt="Kernel Circuit Modified 8" src="resources/QKernel-Circuit-M-8.png"></center>
+<p align="center"><img alt="Kernel Circuit Original 4" src="resources/QKernel-Circuit-O-4.png"></p>
+<p align="center"><img alt="Kernel Circuit Original 8" src="resources/QKernel-Circuit-O-8.png"></p>
+<p align="center"><img alt="Kernel Circuit Modified 4" src="resources/QKernel-Circuit-M-4.png"><img alt="Kernel Circuit Modified 8" src="resources/QKernel-Circuit-M-8.png"></p>
 
 The first two images show the original quantum kernel creation circuit for 4 and 8 training thetas, respectively. The second two images show the modified quantum kernel creation circuit for 4 and 8 trainin thetas, respectively.
 
 The other circuit is the QSVM circuit, which is based on the HHL circuit. The initial portion of the QSVM circuit is the HHL circuit, which is composed of three parts: phase estimation, controlled rotation, and inverse phase estimation. After the HHL algorithm is the training oracle, which appears very similar to the original quantum kernel creation circuit in the case when there are only two training thetas. The last portion, the final two gates, is the test oracle, which takes a single test theta in the controlled rotation and then applies a Hadamard gate to the 3rd (Y) line. The only additional part of the circuit is the first two gates (X, H) on the 3rd line, which causes the qubit to enter the HHL circuit in the state (1/$\sqrt{2}$) * (|0⟩ - |1⟩). The full circuit for the QSVM can be seen below:
 
-<center><img alt="QSVM Circuit" src="resources/QSVM-Circuit.png"></center>
+<p align="center"><img alt="QSVM Circuit" src="resources/QSVM-Circuit.png"></p>
 
 # Experiments
 
 Two experiments are run using the QSVM and the classical SVM. The QSVM algorithm is simulated on a classical computer and has not been tested on an actual quantum computer. The two datasets are from the Keras datasets API. The first experiment is run on the MNIST dataset, with the numbers 6 and 9 representing the +1 and -1 classes, respectively. The second experiment is run on the Boston Housing dataset, with all datapoints with target prices less than 21 and target prices greater than or equal to 21 representing the +1 and -1 classes, respectively. Both datasets have their respective load and preprocess methods in the `data_preprocess.py` file. The resulting thetas can be seen for the train and test sets of each dataset in the plots below:
 
-<center><img alt="MNIST Thetas" src="resources/MNIST-Thetas.png" width=300 height=400><img alt="Boston Housing Thetas" src="resources/BostonHousing-Thetas.png" width=300 height=400></center>
+<p align="center"><img alt="MNIST Thetas" src="resources/MNIST-Thetas.png" width=300 height=400><img alt="Boston Housing Thetas" src="resources/BostonHousing-Thetas.png" width=300 height=400></p>
 
 The MNIST training and test thetas are on the left plot, while the Boston Housing training and test thetas are on the right. As can be seen, the data is not perfectly linearly separable in any case. Meaning that there is guaranteed to be some inaccuracy in the models, since both the QSVM and the classical SVM are utilizing linear kernels. Both the quantum and classical SVMs were trained on 128 training datapoints for each dataset, and were tested on 100 MNIST test points and 92 Boston Housing test points (due to the Boston Housing dataset being much smaller). The results from the experiments can be seen in the table below.
 
-<center>
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
-.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
-</style>
 <table class="tg">
 <thead>
   <tr>
@@ -77,4 +66,3 @@ The MNIST training and test thetas are on the left plot, while the Boston Housin
   </tr>
 </tbody>
 </table>
-</center>
